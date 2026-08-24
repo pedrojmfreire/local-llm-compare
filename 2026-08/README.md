@@ -2,11 +2,13 @@
 
 # Prompt
 
-Write a JavaScript function that looks for a DIV with ID “main” and scans its text contents. Ignore nested HTML tags
+_Write a JavaScript function that looks for a DIV with ID “main” and scans its text contents. Ignore nested HTML tags
 inside the DIV. The contents are expected to be Markdown. The JavaScript function replaces all Markdown headings, bold,
 italic, underline, bullets and hyperlinks with their corresponding HTML counterparts. Support escape characters and
 nested bold/italic/underline/link Markdown. Don’t support any security sanitization, or use any downloadable libraries.
-The replacement happens once upon function invocation.
+The replacement happens once upon function invocation._
+
+The request for a non-existing Markdown "underline" was kept to measure each LLM's reaction to impossible requests.
 
 
 # Results
@@ -30,4 +32,10 @@ The replacement happens once upon function invocation.
 | Sonnet 5 Medium                    | -             | Claude    | 2:42          | ?               | ?     | ok                           |
 | Mistral Think                      | -             | Le Chat   | 0:58          | ?               | ?     | ok                           |
 
-All tests run on the Runtime "chat" interface, with the laptop plugged into power.
+
+## Notes
+
+- All tests were run on the Runtime "chat" interface, with the laptop plugged into power.
+- The response from Qwen 3.8 9B has multiple JavaScript errors that Codex corrected when copying the JavaScript
+  from `/individual-responses` to `/tests/js`.
+

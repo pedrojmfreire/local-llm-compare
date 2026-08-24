@@ -1,25 +1,3 @@
-<html>
-
-<body>
-
-<div id="main">
-# My heading
-
-This is **bold with *nested italic***.
-
-This is **another bold with *nested italic* and follow-up non-italic bold**.
-
-This is ++underlined with **bold** inside++.
-
-- First item
-- Second **bold** item
-- A [link with *italic text*](https://example.com)
-
-\*This is not italic\*
-</div>
-
-
-<script>
 function convertMarkdownToHtml() {
   const div = document.getElementById('main');
   if (!div || div.dataset.markdownConverted) return;
@@ -66,14 +44,7 @@ function convertMarkdownToHtml() {
   div.innerHTML = text;
   div.dataset.markdownConverted = 'true';
 }
-// Call the function when needed
-convertMarkdownToHtml();
 
-
-</script>
-
-
-
-</body>
-</html>
-
+function run() {
+  convertMarkdownToHtml();
+}
