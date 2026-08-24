@@ -35,7 +35,8 @@ The request for a non-existing Markdown "underline" was kept to measure each LLM
 
 ## Notes
 
+- All tests were run on a base M5 MacBook Pro with 32 GB of RAM.
 - All tests were run on the Runtime "chat" interface, with the laptop plugged into power.
 - The response from Qwen 3.8 9B has multiple JavaScript errors that Codex corrected when copying the JavaScript
-  from `/individual-responses` to `/tests/js`.
+  from `/individual-responses` to `/tests/js`. Despite the correction, that model would still score very poorly.
 
