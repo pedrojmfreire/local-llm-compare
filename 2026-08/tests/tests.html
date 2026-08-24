@@ -68,8 +68,8 @@
 <body>
   <div class="toolbar">
     <label for="scriptSelect">LLM response</label>
-    <select id="scriptSelect"></select>
-    <button id="resetButton" type="button">Reset</button>
+    <select id="scriptSelect" disabled></select>
+    <button id="resetButton" type="button" disabled>Reset</button>
     <button id="runButton" type="button" disabled>Run</button>
     <div id="status" role="status" aria-live="polite"></div>
   </div>
@@ -77,19 +77,8 @@
   <div id="main"></div>
 
   <script>
-    const initialMarkdown = `# My heading
-
-This is **bold with *nested italic***.
-
-This is **another bold with *nested italic* and follow-up non-italic bold**.
-
-This is ++underlined with **bold** inside++.
-
-- First item
-- Second **bold** item
-- A [link with *italic text*](https://example.com)
-
-\\*This is not italic\\*`;
+    let initialMarkdown = '';
+    let testCases = [];
 
     const scripts = [
       { label: 'ChatGPT Online', file: 'js/chatgpt-online.js' },
@@ -100,7 +89,7 @@ This is ++underlined with **bold** inside++.
       { label: 'Ornith MTPLX', file: 'js/ornith-mtplx.js' },
       { label: 'Qwen3 Coder LMS', file: 'js/qwen3-coder-lms.js' },
       { label: 'Qwen3.6 27B MTPLX', file: 'js/qwen3.6-27b-mtplx.js' },
-      { label: 'Qwen3.6 Coder LMS', file: 'js/qwen3.6-coder-lms.js' },
+      { label: 'Qwen3.6 35B LMS', file: 'js/qwen3.6-35b-lms.js' },
       { label: 'Qwen3.8 27B LMS', file: 'js/qwen3.8-27b-lms.js' },
       { label: 'Qwen3.8 9B LMS', file: 'js/qwen3.8-9b-lms.js' },
       { label: 'Qwen3.8 MTPLX', file: 'js/qwen3.8-mtplx.js' },
@@ -123,6 +112,127 @@ This is ++underlined with **bold** inside++.
       main.textContent = initialMarkdown;
       delete main.dataset.markdownConverted;
       setStatus('');
+    }
+
+    function parseFixture(rawText) {
+      const tests = [];
+      const markdown = rawText.replace(/^[ \t]*<!--\s*TEST\s+([\s\S]*?)\s*-->[ \t]*\r?\n?/gm, (match, json) => {
+        try {
+          const test = JSON.parse(json);
+
+          if (!test.name || (!test.selector && !test.notSelector)) {
+            throw new Error('Each test needs a name and selector or notSelector.');
+          }
+
+          tests.push(test);
+          return '';
+        } catch (error) {
+          throw new Error(`Invalid test metadata: ${error.message}`);
+        }
+      });
+
+      return { markdown, tests };
+    }
+
+    function normalizeText(value) {
+      return String(value || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function attributeMatches(element, expectedAttributes) {
+      if (!expectedAttributes) return true;
+
+      return Object.entries(expectedAttributes).every(([name, expectedValue]) => {
+        return element.getAttribute(name) === String(expectedValue);
+      });
+    }
+
+    function elementMatches(element, assertion) {
+      if (assertion.text !== undefined && normalizeText(element.textContent) !== normalizeText(assertion.text)) {
+        return false;
+      }
+
+      if (assertion.containsText !== undefined && !normalizeText(element.textContent).includes(normalizeText(assertion.containsText))) {
+        return false;
+      }
+
+      if (!attributeMatches(element, assertion.attr)) {
+        return false;
+      }
+
+      if (assertion.contains && !findMatchingElement(element, assertion.contains)) {
+        return false;
+      }
+
+      if (assertion.notContains && findMatchingElement(element, assertion.notContains)) {
+        return false;
+      }
+
+      if (assertion.notSelector && element.querySelector(assertion.notSelector)) {
+        return false;
+      }
+
+      return true;
+    }
+
+    function findMatchingElement(root, assertion) {
+      return findMatchingElements(root, assertion)[0] || null;
+    }
+
+    function findMatchingElements(root, assertion) {
+      if (!assertion.selector) {
+        return elementMatches(root, assertion) ? [root] : [];
+      }
+
+      const candidates = assertion.selector === '#main'
+        ? [main]
+        : Array.from(root.querySelectorAll(assertion.selector));
+
+      return candidates.filter((candidate) => elementMatches(candidate, assertion));
+    }
+
+    function assertionPasses(root, assertion) {
+      const matches = findMatchingElements(root, assertion);
+      return matches.length >= (assertion.minCount || 1);
+    }
+
+    function evaluateTests() {
+      const failedNames = [];
+
+      for (const test of testCases) {
+        if (!assertionPasses(main, test)) {
+          failedNames.push(test.name);
+        }
+      }
+
+      return {
+        failedNames,
+        passed: testCases.length - failedNames.length,
+        total: testCases.length
+      };
+    }
+
+    function formatTestSummary(result) {
+      const summary = `Tests: ${result.passed}/${result.total}.`;
+
+      if (result.failedNames.length === 0) {
+        return summary;
+      }
+
+      return `${summary} Failed: ${result.failedNames.join(', ')}.`;
+    }
+
+    async function loadInitialMarkdown() {
+      setStatus('Loading test.md...');
+
+      const response = await fetch('test.md');
+
+      if (!response.ok) {
+        throw new Error(`Could not load test.md (${response.status}).`);
+      }
+
+      const fixture = parseFixture(await response.text());
+      initialMarkdown = fixture.markdown;
+      testCases = fixture.tests;
     }
 
     function unloadScript() {
@@ -162,7 +272,7 @@ This is ++underlined with **bold** inside++.
 
       try {
         window.run();
-        setStatus(`${scripts[scriptSelect.selectedIndex].label} ran.`);
+        setStatus(`${scripts[scriptSelect.selectedIndex].label} ran. ${formatTestSummary(evaluateTests())}`);
       } catch (error) {
         setStatus(error && error.message ? error.message : String(error), true);
         throw error;
@@ -180,8 +290,20 @@ This is ++underlined with **bold** inside++.
     resetButton.addEventListener('click', resetMain);
     runButton.addEventListener('click', runSelectedScript);
 
-    resetMain();
-    loadSelectedScript();
+    async function initialize() {
+      try {
+        await loadInitialMarkdown();
+        scriptSelect.disabled = false;
+        resetButton.disabled = false;
+        resetMain();
+        loadSelectedScript();
+      } catch (error) {
+        unloadScript();
+        setStatus(error && error.message ? error.message : String(error), true);
+      }
+    }
+
+    initialize();
   </script>
 </body>
 </html>
