@@ -38,10 +38,10 @@
 <!-- TEST {"name":"escaped link stays text","selector":"#main","containsText":"[This is not a link](https://example.com)","notContains":{"selector":"a","text":"This is not a link","attr":{"href":"https://example.com"}}} -->
 \[This is not a link\](https://example.com)
 
-<!-- TEST {"name":"escaped bold stays text","selector":"#main","containsText":"**This is not bold**","notContains":{"selector":"strong","text":"This is not bold"}} -->
+<!-- TEST {"name":"single escaped bold markers produce italic text","selector":"#main","containsText":"*This is not bold*","contains":{"selector":"em","text":"This is not bold*"},"notContains":{"selector":"strong","text":"This is not bold"}} -->
 \**This is not bold\**
 
-<!-- TEST {"name":"escaped backslashes keep italic text literal","selector":"#main","containsText":"Italic between backslashes","notContains":{"selector":"em","text":"Italic between backslashes"}} -->
+<!-- TEST {"name":"escaped backslashes leave italic markers active","selector":"#main","containsText":"Italic between backslashes","contains":{"selector":"em","containsText":"Italic between backslashes"}} -->
 \\*Italic between backslashes\\*
 
 <!-- TEST {"name":"unclosed section heading","selector":"h2","text":"Unclosed and adjacent formatting"} -->
