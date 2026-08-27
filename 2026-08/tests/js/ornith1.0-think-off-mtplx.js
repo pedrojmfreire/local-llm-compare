@@ -1,0 +1,75 @@
+function convertMarkdownToHtml() {
+	const mainDiv = document.getElementById('main');
+	if (!mainDiv) return;
+
+	let text = mainDiv.textContent;
+
+	// Process escape characters first (replace with placeholder)
+	const escapeMap = {};
+	let escapeIndex = 0;
+	text = text.replace(/\\([*_~\[\]()#])/g, (match, char) => {
+		const placeholder = `\x00ESCAPE${escapeIndex++}\x00`;
+		escapeMap[placeholder] = "\\" + char;
+		return placeholder;
+	});
+
+	// Convert headings (must be at start of line)
+	text = text.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>');
+	text = text.replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>');
+	text = text.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
+	text = text.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+	text = text.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+	text = text.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+
+	// Convert bold and italic (nested)
+	text = text.replace(/\*{3}(.+?)\*{3}/g, '<strong><em>$1</em></strong>');
+	text = text.replace(/\*{2}(.+?)\*{2}/g, '<strong>$1</strong>');
+	text = text.replace(/_{3}(.+?)_{3}/g, '<strong><u>$1</u></strong>');
+	text = text.replace(/_{2}(.+?)_{2}/g, '<u>$1</u>');
+	text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+	text = text.replace(/_(.+?)_/g, '<em>$1</em>');
+
+	// Convert strikethrough
+	text = text.replace(/~~(.+?)~~/g, '<del>$1</del>');
+
+	// Convert hyperlinks (must be after other formatting)
+	text = text.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
+
+	// Convert unordered list items
+	text = text.replace(/^[*\-+]\s+(.+)$/gm, '<li>$1</li>');
+	text = text.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+
+	// Convert ordered list items
+	text = text.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+	text = text.replace(/(<li>.*<\/li>\n?)+/g, (match) => {
+		if (match.match(/<li>/g).length > 0) {
+			return '<ol>' + match + '</ol>';
+		}
+		return match;
+	});
+
+	// Convert code blocks (triple backticks)
+	text = text.replace(/```(\w*)\n([\s\S]+?)```/g, '<pre><code>$2</code></pre>');
+
+	// Convert inline code (single backticks)
+	text = text.replace(/`(.+?)`/g, '<code>$1</code>');
+
+	// Convert blockquotes
+	text = text.replace(/^>\s+(.+)$/gm, '<blockquote>$1</blockquote>');
+
+	// Convert horizontal rules
+	text = text.replace(/^---+$/gm, '<hr>');
+	text = text.replace(/^\*\*\*+$/gm, '<hr>');
+
+	// Restore escape characters
+	Object.keys(escapeMap).forEach(placeholder => {
+		text = text.replace(new RegExp(escapeMap[placeholder], 'g'), escapeMap[placeholder]);
+	});
+
+	mainDiv.innerHTML = text;
+}
+
+function run() {
+	// Call the function once
+	convertMarkdownToHtml();
+}

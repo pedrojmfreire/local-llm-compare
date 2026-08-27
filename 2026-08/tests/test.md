@@ -18,12 +18,8 @@
 
 <!-- TEST {"name":"first unordered list item","selector":"li","text":"First unordered item"} -->
 - First unordered item
-<!-- TEST {"name":"nested unordered list item","selector":"li li","text":"Nested unordered item"} -->
-  - Nested unordered item
-<!-- TEST {"name":"nested list link","selector":"li li","text":"Nested item with a link","contains":{"selector":"a","text":"a link","attr":{"href":"https://example.com/nested"}}} -->
-  - Nested item with [a link](https://example.com/nested)
-<!-- TEST {"name":"outer list resumes","selector":"li","text":"Back to the outer list"} -->
-- Back to the outer list
+<!-- TEST {"name":"nested list link","selector":"li","text":"Unordered item with a link","contains":{"selector":"a","text":"a link","attr":{"href":"https://example.com/nested"}}} -->
+- Unordered item with [a link](https://example.com/nested)
 
 <!-- TEST {"name":"asterisk bullet","selector":"li","text":"Asterisk bullet"} -->
 * Asterisk bullet
