@@ -38,6 +38,13 @@ The request for a non-existing Markdown "underline" was kept to measure each LLM
 | Mistral Think                      | -             | Le Chat   | 0:58          | ?               | ?     | 24/31                    |
 
 
+## Caveat
+
+All models were run in their default temperature settings. This means that different runs of the same model may
+result in wildly different metrics. For instance, Ornith 1.0 with thinking on was observed running for anywhere between
+2 and 5 minutes, and with test results between 17/31 and 28/31. **Take these results with a grain of salt**.
+
+
 ## Notes
 
 - All tests were run on a base M5 MacBook Pro with 32 GB of RAM.
@@ -46,6 +53,65 @@ The request for a non-existing Markdown "underline" was kept to measure each LLM
   from `/individual-responses` to `/tests/js`. Despite the correction, that model would still score very poorly.
 - The responses from Ornith 1.0 35B MTPLX (thinking off) and Ornith 1.5 35B A3B MTPLX (thinking on) had small issues
   that were corrected in the corresponding JavaScript file before running the tests.
-- All models were run in their default temperature settings. This means that different runs of the same model may
-  result in wildly different metrics. For instance, Ornith 1.0 with thinking on was observed running for 2 to 5 minutes
-  and with test results between 17/31 and 28/31. **Take these results with a large grain of salt**.
+
+
+# Adding test.md to the Prompt
+
+Adding the `test.md` file (without comments) to the prompt did not improve things significantly:
+- Ornith 1.0 gave a result that scored much lower
+- Ornith 1.5 took over 1h thinking, after which I gave up waiting
+- Qwen 3.8 took over 15min thinking, after which I gave up waiting
+
+
+_Write a JavaScript function that looks for a DIV with ID “main” and scans its text contents. Ignore nested HTML tags
+inside the DIV. The contents are expected to be Markdown. The JavaScript function replaces all Markdown headings, bold,
+italic, underline, bullets and hyperlinks with their corresponding HTML counterparts. Support escape characters and
+nested bold/italic/underline/link Markdown. Don’t support any security sanitization, or use any downloadable libraries.
+The replacement happens once upon function invocation._
+
+_Consider the following edge cases described in this test Markdown file:_
+
+```
+## Heading levels
+
+### Third-level heading with **bold**
+
+###### Sixth-level heading
+
+#No space after hash should stay plain text
+
+####### Seven hashes should not become an h7
+
+## Lists
+
+- First unordered item
+- Unordered item with [a link](https://example.com/nested)
+
+* Asterisk bullet
++ Plus bullet
+- Dash bullet after other markers
+
+## Escapes
+
+\[This is not a link\](https://example.com)
+\**This is not bold\**
+\\*Italic between backslashes\\*
+
+## Unclosed and adjacent formatting
+This has **unclosed bold.
+This has *unclosed italic.
+This has ++unclosed underline.
+
+Adjacent emphasis: **bold***italic*.
+Triple emphasis: ***bold+italic***.
+Bold containing italic: **bold *italic***.
+Bold italic then bold text: ***bold+italic* bold**.
+Italic containing bold then italic text: ***bold+italic** italic*.
+Underscore emphasis: __bold with underscores__ and _italic with underscores_.
+
+## Links and raw text
+
+A link with punctuation: [example, with comma](https://example.com/path?x=1&y=two).
+A link with parentheses in the URL: [parentheses](https://example.com/a_(b)).
+Raw URL: https://example.com/raw-url
+```
